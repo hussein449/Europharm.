@@ -1,5 +1,5 @@
 
-import { Edit } from "lucide-react";
+import { Edit, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type CustomerItemProps = {

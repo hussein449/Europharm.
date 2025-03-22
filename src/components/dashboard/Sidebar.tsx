@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   FileText, 
@@ -15,10 +16,9 @@ import {
   Calendar,
   Map,
   User,
-  Award,
   UserCog,
   Box,
-  ArrowsLeftRight
+  ArrowLeftRight
 } from "lucide-react";
 import CustomerItem from "./CustomerItem";
 
@@ -60,7 +60,7 @@ const menuItems: MenuItem[] = [
     icon: Archive,
     subItems: [
       { title: "Sample Stock", icon: Box },
-      { title: "Sample Movements", icon: ArrowsLeftRight }
+      { title: "Sample Movements", icon: ArrowLeftRight }
     ]
   },
   { title: "Cycles", icon: BarChart, isActive: true, subItems: [{ title: "Cycles", icon: BarChart }] },
