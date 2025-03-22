@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Search, 
   Users, 
@@ -19,6 +19,20 @@ type ReportButton = {
 
 const Reports = () => {
   const [activeReport, setActiveReport] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUsername(parsedUser.name || "");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   const reportButtons: ReportButton[] = [
     {
@@ -59,7 +73,7 @@ const Reports = () => {
     <div className="flex h-screen bg-slate-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header username="Hussein Nasreddine" />
+        <Header username={username} />
         <main className="flex-1 overflow-x-auto overflow-y-auto p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Reports Dashboard</h1>
