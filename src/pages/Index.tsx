@@ -1,34 +1,33 @@
 
 import { useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import Hero from '@/components/Hero';
-import CyclesSection from '@/components/CyclesSection';
-import ContactSection from '@/components/ContactSection';
-import Footer from '@/components/Footer';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    // Smooth scroll implementation for hash links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href') as string);
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth'
-          });
+    // Check if user is already logged in
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser.isAuthenticated) {
+          navigate("/dashboard");
+          return;
         }
-      });
-    });
-  }, []);
+      } catch (error) {
+        // Invalid user data, redirect to login
+        localStorage.removeItem("user");
+      }
+    }
+    
+    // Not logged in, redirect to login
+    navigate("/");
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
-      <Navbar />
-      <Hero />
-      <CyclesSection />
-      <ContactSection />
-      <Footer />
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Redirecting...</p>
     </div>
   );
 };

@@ -58,6 +58,12 @@ export default {
 					light: '#f0f9ff',
 					dark: '#002b4d',
 					accent: '#4dabf7'
+				},
+				// Dashboard colors
+				sidebar: {
+					DEFAULT: '#2c3e50',
+					hover: '#34495e',
+					active: '#1c2a38'
 				}
 			},
 			borderRadius: {
