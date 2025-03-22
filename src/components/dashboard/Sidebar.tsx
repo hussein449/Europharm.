@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { 
   FileText, 
   Users, 
@@ -18,7 +19,9 @@ import {
   User,
   UserCog,
   Box,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Search,
+  MapPin
 } from "lucide-react";
 import CustomerItem from "./CustomerItem";
 
@@ -26,7 +29,8 @@ type MenuItem = {
   title: string;
   icon: React.ElementType;
   isActive?: boolean;
-  subItems?: { title: string; icon: React.ElementType }[];
+  link?: string;
+  subItems?: { title: string; icon: React.ElementType; link?: string }[];
 };
 
 const menuItems: MenuItem[] = [
@@ -64,7 +68,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { title: "Cycles", icon: BarChart, isActive: true, subItems: [{ title: "Cycles", icon: BarChart }] },
-  { title: "Reports", icon: FileBarChart },
+  { title: "Reports", icon: FileBarChart, link: "/reports" },
   { title: "Sales Transactions", icon: CircleDollarSign },
   { title: "Surveys", icon: BarChart2 },
   { title: "Collections", icon: Package }
@@ -97,15 +101,27 @@ const Sidebar = () => {
         <ul className="py-4">
           {menuItems.map((item) => (
             <li key={item.title} className="mb-1">
-              <button
-                onClick={() => toggleExpand(item.title)}
-                className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
-                  item.isActive ? "bg-[#34495e]" : ""
-                }`}
-              >
-                <item.icon className="w-5 h-5 mr-3" />
-                <span>{item.title}</span>
-              </button>
+              {item.link ? (
+                <Link
+                  to={item.link}
+                  className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
+                    item.isActive ? "bg-[#34495e]" : ""
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  <span>{item.title}</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => toggleExpand(item.title)}
+                  className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
+                    item.isActive ? "bg-[#34495e]" : ""
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 mr-3" />
+                  <span>{item.title}</span>
+                </button>
+              )}
               
               {expandedItem === item.title && item.subItems && (
                 <ul className="bg-[#243342]">
