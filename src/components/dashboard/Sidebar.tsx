@@ -1,22 +1,69 @@
-
 import { useState } from "react";
-import { FileText, Users, UserPlus, Package, Archive, BarChart, FileBarChart, BarChart2, CircleDollarSign, ClipboardList } from "lucide-react";
+import { 
+  FileText, 
+  Users, 
+  UserPlus, 
+  Package, 
+  Archive, 
+  BarChart, 
+  FileBarChart, 
+  BarChart2, 
+  CircleDollarSign, 
+  ClipboardList,
+  Folder,
+  ListFilter,
+  Calendar,
+  Map,
+  User,
+  Award,
+  UserCog,
+  Box,
+  ArrowsLeftRight
+} from "lucide-react";
+import CustomerItem from "./CustomerItem";
 
 type MenuItem = {
   title: string;
   icon: React.ElementType;
   isActive?: boolean;
-  subItems?: string[];
+  subItems?: { title: string; icon: React.ElementType }[];
 };
 
 const menuItems: MenuItem[] = [
-  { title: "General", icon: FileText },
+  { 
+    title: "General", 
+    icon: FileText,
+    subItems: [
+      { title: "Divisions", icon: Folder },
+      { title: "Reasons", icon: ListFilter },
+      { title: "Events", icon: Calendar },
+      { title: "Areas", icon: Map }
+    ]
+  },
   { title: "Brochures", icon: ClipboardList },
-  { title: "Users", icon: Users },
-  { title: "Customers", icon: UserPlus },
+  { 
+    title: "Users", 
+    icon: Users 
+  },
+  { 
+    title: "Customers", 
+    icon: UserPlus,
+    subItems: [
+      { title: "Customers", icon: User },
+      { title: "Specialists", icon: UserCog },
+      { title: "New Customers", icon: UserPlus }
+    ]
+  },
   { title: "Items", icon: Package },
-  { title: "Sample Stock", icon: Archive },
-  { title: "Cycles", icon: BarChart, isActive: true, subItems: ["Cycles"] },
+  { 
+    title: "Sample Stock", 
+    icon: Archive,
+    subItems: [
+      { title: "Sample Stock", icon: Box },
+      { title: "Sample Movements", icon: ArrowsLeftRight }
+    ]
+  },
+  { title: "Cycles", icon: BarChart, isActive: true, subItems: [{ title: "Cycles", icon: BarChart }] },
   { title: "Reports", icon: FileBarChart },
   { title: "Sales Transactions", icon: CircleDollarSign },
   { title: "Surveys", icon: BarChart2 },
@@ -63,13 +110,18 @@ const Sidebar = () => {
               {expandedItem === item.title && item.subItems && (
                 <ul className="bg-[#243342]">
                   {item.subItems.map((subItem) => (
-                    <li key={subItem}>
-                      <a 
-                        href="#" 
-                        className="block py-2 px-12 hover:bg-[#1c2a38] text-gray-300"
-                      >
-                        {subItem}
-                      </a>
+                    <li key={subItem.title}>
+                      {subItem.title === "Customers" ? (
+                        <CustomerItem title={subItem.title} />
+                      ) : (
+                        <a 
+                          href="#" 
+                          className="block py-2 px-12 hover:bg-[#1c2a38] text-gray-300 flex items-center"
+                        >
+                          <subItem.icon className="w-4 h-4 mr-2 opacity-70" />
+                          {subItem.title}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
