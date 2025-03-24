@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   FileText, 
@@ -76,6 +76,20 @@ const menuItems: MenuItem[] = [
 
 const Sidebar = () => {
   const [expandedItem, setExpandedItem] = useState<string | null>("Cycles");
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUsername(parsedUser.name || "");
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+      }
+    }
+  }, []);
 
   const toggleExpand = (title: string) => {
     setExpandedItem(expandedItem === title ? null : title);
@@ -93,7 +107,7 @@ const Sidebar = () => {
         </div>
         <div>
           <p className="text-xs opacity-80">Welcome,</p>
-          <p className="font-medium">Hussein Nasreddine</p>
+          <p className="font-medium">{username}</p>
         </div>
       </div>
       
