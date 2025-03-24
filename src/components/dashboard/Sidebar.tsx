@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -47,7 +46,7 @@ const menuItems: MenuItem[] = [
       { title: "Areas", icon: Map }
     ]
   },
-  { title: "Brochures", icon: ClipboardList },
+  { title: "Brochures", icon: ClipboardList, link: "/brochures" },
   { 
     title: "Users", 
     icon: Users 
@@ -84,7 +83,6 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Get user data from localStorage
     const userData = localStorage.getItem("user");
     if (userData) {
       try {
@@ -104,7 +102,6 @@ const Sidebar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  // For mobile: sidebar is hidden by default and shown when menu button is clicked
   if (isMobile) {
     return (
       <>
@@ -187,7 +184,6 @@ const Sidebar = () => {
             </ul>
           </nav>
           
-          {/* Mobile close button at the bottom */}
           <div className="p-4 border-t border-gray-700">
             <button 
               onClick={toggleMobileMenu}
@@ -202,7 +198,6 @@ const Sidebar = () => {
     );
   }
 
-  // Desktop version remains largely the same
   return (
     <aside className="w-64 bg-[#2c3e50] text-white flex flex-col h-screen">
       <div className="p-5 border-b border-gray-700 flex items-center space-x-3">
