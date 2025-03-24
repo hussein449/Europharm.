@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   FileText, 
@@ -7,7 +6,8 @@ import {
   Download, 
   Edit, 
   Trash2, 
-  Search 
+  Search,
+  Upload 
 } from "lucide-react";
 import { 
   Table, 
@@ -25,8 +25,8 @@ import Header from "@/components/dashboard/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-// Type definitions
 type BrochureType = {
   id: number;
   title: string;
@@ -35,9 +35,10 @@ type BrochureType = {
   created: string;
   fileSize: string;
   downloadUrl: string;
+  fileType?: string;
+  fileData?: string;
 };
 
-// Sample data
 const initialBrochures: BrochureType[] = [
   {
     id: 1,
@@ -47,6 +48,7 @@ const initialBrochures: BrochureType[] = [
     created: "2023-10-15",
     fileSize: "3.2 MB",
     downloadUrl: "#",
+    fileType: "pdf"
   },
   {
     id: 2,
@@ -101,9 +103,10 @@ const Brochures = () => {
     category: "",
   });
   const [editingBrochure, setEditingBrochure] = useState<BrochureType | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
-  // Check if user is logged in and get username
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (!userData) {
@@ -120,8 +123,6 @@ const Brochures = () => {
       }
       setUsername(parsedUser.name || "");
       
-      // This is just for demo purposes - in a real app, you'd check user roles from your backend
-      // Assuming "admin" is a supervisor for demonstration
       setIsSupervisor(parsedUser.name === "admin");
     } catch (error) {
       localStorage.removeItem("user");
@@ -129,7 +130,6 @@ const Brochures = () => {
     }
   }, [navigate]);
 
-  // Search functionality
   useEffect(() => {
     if (searchTerm) {
       const filtered = brochures.filter(
@@ -144,29 +144,84 @@ const Brochures = () => {
     }
   }, [searchTerm, brochures]);
 
-  // Handle adding a new brochure
-  const handleAddBrochure = () => {
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File size exceeds 10MB limit");
+        return;
+      }
+
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Only PDF and Word documents are supported");
+        return;
+      }
+
+      setSelectedFile(file);
+      
+      const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+      setNewBrochure(prev => ({
+        ...prev,
+        fileSize: `${fileSizeInMB} MB`,
+        fileType: file.type.split('/')[1]
+      }));
+    }
+  };
+
+  const resetFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setSelectedFile(null);
+  };
+
+  const handleAddBrochure = async () => {
     if (!newBrochure.title || !newBrochure.description || !newBrochure.category) {
-      toast.error("Please fill in all fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    const newBrochureItem: BrochureType = {
-      id: brochures.length > 0 ? Math.max(...brochures.map(b => b.id)) + 1 : 1,
-      title: newBrochure.title || "",
-      description: newBrochure.description || "",
-      category: newBrochure.category || "",
-      created: new Date().toISOString().split('T')[0],
-      fileSize: "0.5 MB", // Placeholder
-      downloadUrl: "#"
-    };
+    if (!selectedFile) {
+      toast.error("Please select a file to upload");
+      return;
+    }
 
-    setBrochures([...brochures, newBrochureItem]);
-    setNewBrochure({ title: "", description: "", category: "" });
-    toast.success("Brochure added successfully");
+    try {
+      const fileData = await fileToBase64(selectedFile);
+      
+      const newBrochureItem: BrochureType = {
+        id: brochures.length > 0 ? Math.max(...brochures.map(b => b.id)) + 1 : 1,
+        title: newBrochure.title || "",
+        description: newBrochure.description || "",
+        category: newBrochure.category || "",
+        created: new Date().toISOString().split('T')[0],
+        fileSize: newBrochure.fileSize || `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`,
+        downloadUrl: "#",
+        fileType: newBrochure.fileType || selectedFile.type.split('/')[1],
+        fileData: fileData
+      };
+
+      setBrochures([...brochures, newBrochureItem]);
+      setNewBrochure({ title: "", description: "", category: "" });
+      resetFileInput();
+      toast.success("Brochure added successfully");
+    } catch (error) {
+      console.error("Error adding brochure:", error);
+      toast.error("Failed to add brochure");
+    }
   };
 
-  // Handle editing a brochure
   const handleUpdateBrochure = () => {
     if (!editingBrochure) return;
     
@@ -179,7 +234,6 @@ const Brochures = () => {
     toast.success("Brochure updated successfully");
   };
 
-  // Handle deleting a brochure
   const handleDeleteBrochure = () => {
     if (!brochureToDelete) return;
     
@@ -193,10 +247,19 @@ const Brochures = () => {
     toast.success("Brochure deleted successfully");
   };
 
-  // Handle download (in a real app, this would download the actual file)
   const handleDownload = (brochure: BrochureType) => {
-    toast.info(`Downloading ${brochure.title}...`);
-    // In a real app, this would trigger the file download
+    if (brochure.fileData) {
+      const linkSource = brochure.fileData;
+      const downloadLink = document.createElement("a");
+      const fileName = `${brochure.title.replace(/\s+/g, '_')}.${brochure.fileType || 'pdf'}`;
+      
+      downloadLink.href = linkSource;
+      downloadLink.download = fileName;
+      downloadLink.click();
+      toast.success(`Downloading ${brochure.title}...`);
+    } else {
+      toast.info(`Downloading ${brochure.title}...`);
+    }
   };
 
   return (
@@ -210,7 +273,6 @@ const Brochures = () => {
             <p className="text-gray-600">Browse, download and manage medical brochures</p>
           </div>
 
-          {/* Search and Add Button Row */}
           <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
             <div className="relative w-full md:w-1/3">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -235,7 +297,7 @@ const Brochures = () => {
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <label htmlFor="title" className="text-sm font-medium">Title</label>
+                      <Label htmlFor="title" className="text-sm font-medium">Title</Label>
                       <Input
                         id="title"
                         value={newBrochure.title}
@@ -243,7 +305,7 @@ const Brochures = () => {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="category" className="text-sm font-medium">Category</label>
+                      <Label htmlFor="category" className="text-sm font-medium">Category</Label>
                       <Input
                         id="category"
                         value={newBrochure.category}
@@ -251,17 +313,42 @@ const Brochures = () => {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <label htmlFor="description" className="text-sm font-medium">Description</label>
+                      <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                       <Input
                         id="description"
                         value={newBrochure.description}
                         onChange={(e) => setNewBrochure({...newBrochure, description: e.target.value})}
                       />
                     </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="file" className="text-sm font-medium">Upload File (PDF, DOC, DOCX)</Label>
+                      <div className="flex items-center">
+                        <Input
+                          ref={fileInputRef}
+                          id="file"
+                          type="file"
+                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="mr-2"
+                        >
+                          <Upload size={16} className="mr-2" /> Select File
+                        </Button>
+                        <span className="text-sm text-gray-500">
+                          {selectedFile ? `${selectedFile.name} (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)` : "No file selected"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">Maximum file size: 10MB</p>
+                    </div>
                   </div>
                   <DialogFooter>
                     <DialogClose asChild>
-                      <Button variant="outline">Cancel</Button>
+                      <Button variant="outline" onClick={resetFileInput}>Cancel</Button>
                     </DialogClose>
                     <Button 
                       className="bg-[#3498db] hover:bg-[#2980b9]"
@@ -275,14 +362,12 @@ const Brochures = () => {
             )}
           </div>
 
-          {/* Brochures Table/Card View */}
           <Card className="overflow-hidden">
             <CardHeader className="bg-white border-b py-4">
               <CardTitle className="text-lg font-semibold">Available Brochures</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {isMobile ? (
-                // Mobile view - cards
                 <div className="divide-y">
                   {filteredBrochures.map((brochure) => (
                     <div key={brochure.id} className="p-4 bg-white hover:bg-gray-50">
@@ -396,7 +481,6 @@ const Brochures = () => {
                   ))}
                 </div>
               ) : (
-                // Desktop view - table
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -418,7 +502,16 @@ const Brochures = () => {
                     ) : (
                       filteredBrochures.map((brochure) => (
                         <TableRow key={brochure.id} className="hover:bg-gray-50">
-                          <TableCell className="font-medium">{brochure.title}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center">
+                              {brochure.fileType === 'pdf' ? (
+                                <FileText size={16} className="mr-2 text-red-500" />
+                              ) : (
+                                <FileText size={16} className="mr-2 text-blue-500" />
+                              )}
+                              {brochure.title}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <span className="bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs">
                               {brochure.category}
@@ -530,7 +623,6 @@ const Brochures = () => {
             </CardContent>
           </Card>
 
-          {/* Delete Confirmation Dialog */}
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
