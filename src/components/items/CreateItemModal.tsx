@@ -59,9 +59,16 @@ const CreateItemModal = ({
   const onSubmit = async (data: ItemFormValues) => {
     setIsSubmitting(true);
     try {
+      // Ensure we're sending data with the required fields as non-optional
+      const itemData = {
+        code: data.code, // Now guaranteed to be a non-empty string
+        name: data.name, // Now guaranteed to be a non-empty string
+        is_active: data.is_active
+      };
+
       const { error } = await supabase
         .from("items")
-        .insert(data);
+        .insert(itemData);
 
       if (error) throw error;
 
