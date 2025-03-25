@@ -22,6 +22,7 @@ const ItemsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   const fetchItems = async () => {
@@ -32,7 +33,7 @@ const ItemsTable = () => {
         .select('*', { count: 'exact' });
       
       if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,alt_name.ilike.%${searchTerm}%`);
+        query = query.or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%`);
       }
       
       const { data, count, error } = await query
@@ -56,6 +57,7 @@ const ItemsTable = () => {
   }, [searchTerm, currentPage]);
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
+    setStatusUpdating(id);
     try {
       const { error } = await supabase
         .from('items')
@@ -74,6 +76,8 @@ const ItemsTable = () => {
     } catch (error) {
       console.error('Error updating item status:', error);
       toast.error('Failed to update item status');
+    } finally {
+      setStatusUpdating(null);
     }
   };
 
@@ -105,14 +109,13 @@ const ItemsTable = () => {
             <TableRow>
               <TableHead>Code</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Alt Name</TableHead>
               <TableHead className="text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10">
+                <TableCell colSpan={3} className="text-center py-10">
                   <div className="flex justify-center items-center">
                     <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
                   </div>
@@ -120,7 +123,7 @@ const ItemsTable = () => {
               </TableRow>
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={3} className="text-center py-10 text-gray-500">
                   {searchTerm ? 'No items match your search' : 'No items found'}
                 </TableCell>
               </TableRow>
@@ -129,15 +132,18 @@ const ItemsTable = () => {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.code}</TableCell>
                   <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.alt_name || '-'}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex justify-center items-center space-x-2">
                       <Switch 
                         checked={item.is_active} 
                         onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+                        disabled={statusUpdating === item.id}
                       />
-                      <span className={item.is_active ? "text-green-600" : "text-red-600"}>
-                        {item.is_active ? "Active" : "Inactive"}
+                      <span className={`
+                        ${item.is_active ? "text-green-600" : "text-red-600"}
+                        ${statusUpdating === item.id ? "opacity-50" : ""}
+                      `}>
+                        {statusUpdating === item.id ? 'Updating...' : (item.is_active ? "Active" : "Inactive")}
                       </span>
                     </div>
                   </TableCell>

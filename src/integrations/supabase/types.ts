@@ -11,7 +11,6 @@ export type Database = {
     Tables: {
       items: {
         Row: {
-          alt_name: string | null
           code: string
           created_at: string | null
           id: string
@@ -20,7 +19,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          alt_name?: string | null
           code: string
           created_at?: string | null
           id?: string
@@ -29,7 +27,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          alt_name?: string | null
           code?: string
           created_at?: string | null
           id?: string
