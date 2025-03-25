@@ -11,7 +11,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter 
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -61,20 +62,22 @@ const CreateItemModal = ({
     try {
       console.log("Submitting item data:", data);
       
-      // Ensure we're sending data with the required fields as non-optional
+      // Define the item data explicitly with all required fields
       const itemData = {
-        code: data.code, // Now guaranteed to be a non-empty string
-        name: data.name, // Now guaranteed to be a non-empty string
+        code: data.code,
+        name: data.name,
         is_active: data.is_active
       };
 
+      // Attempt to insert the item with a cleaner approach
       const { error } = await supabase
         .from("items")
         .insert(itemData);
 
       if (error) {
         console.error("Error creating item:", error);
-        throw error;
+        toast.error(`Failed to create item: ${error.message}`);
+        return;
       }
 
       toast.success("Item created successfully");
@@ -82,8 +85,8 @@ const CreateItemModal = ({
       onOpenChange(false);
       onItemCreated();
     } catch (error) {
-      console.error("Error creating item:", error);
-      toast.error("Failed to create item");
+      console.error("Error in item creation process:", error);
+      toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,6 +97,9 @@ const CreateItemModal = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Item</DialogTitle>
+          <DialogDescription>
+            Enter the details for the new item below.
+          </DialogDescription>
           <Button
             variant="ghost"
             size="icon"
