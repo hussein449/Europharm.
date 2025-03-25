@@ -76,7 +76,15 @@ const CreateItemModal = ({
 
       if (error) {
         console.error("Error creating item:", error);
-        toast.error(`Failed to create item: ${error.message}`);
+        
+        if (error.code === '42501' && error.message.includes('row-level security policy')) {
+          toast.error("Permission denied: Your account doesn't have rights to create items", {
+            description: "Contact your administrator to request access permissions",
+            duration: 5000
+          });
+        } else {
+          toast.error(`Failed to create item: ${error.message}`);
+        }
         return;
       }
 
