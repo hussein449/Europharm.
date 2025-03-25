@@ -15,6 +15,7 @@ import { Plus, Search, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Item } from "@/types/item";
+import CreateItemModal from "./CreateItemModal";
 
 const ItemsTable = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -23,6 +24,7 @@ const ItemsTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   const fetchItems = async () => {
@@ -87,7 +89,7 @@ const ItemsTable = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Items</h1>
-        <Button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add New Item
         </Button>
@@ -179,6 +181,12 @@ const ItemsTable = () => {
           </div>
         )}
       </div>
+
+      <CreateItemModal 
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        onItemCreated={fetchItems}
+      />
     </div>
   );
 };
