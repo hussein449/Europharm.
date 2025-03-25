@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { 
   FileText, 
   Users, 
@@ -60,7 +60,7 @@ const menuItems: MenuItem[] = [
       { title: "New Customers", icon: UserPlus }
     ]
   },
-  { title: "Items", icon: Package },
+  { title: "Items", icon: Package, link: "/items" },
   { 
     title: "Sample Stock", 
     icon: Archive,
@@ -69,7 +69,7 @@ const menuItems: MenuItem[] = [
       { title: "Sample Movements", icon: ArrowLeftRight }
     ]
   },
-  { title: "Cycles", icon: BarChart, isActive: true, subItems: [{ title: "Cycles", icon: BarChart }] },
+  { title: "Cycles", icon: BarChart, link: "/dashboard", subItems: [{ title: "Cycles", icon: BarChart }] },
   { title: "Reports", icon: FileBarChart, link: "/reports" },
   { title: "Sales Transactions", icon: CircleDollarSign },
   { title: "Surveys", icon: BarChart2 },
@@ -77,12 +77,23 @@ const menuItems: MenuItem[] = [
 ];
 
 const Sidebar = () => {
-  const [expandedItem, setExpandedItem] = useState<string | null>("Cycles");
+  const location = useLocation();
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    const currentPath = location.pathname;
+    const activeMenuItem = menuItems.find(item => 
+      item.link === currentPath || 
+      (item.subItems?.some(subItem => subItem.link === currentPath))
+    );
+    
+    if (activeMenuItem) {
+      setExpandedItem(activeMenuItem.title);
+    }
+    
     const userData = localStorage.getItem("user");
     if (userData) {
       try {
@@ -92,7 +103,7 @@ const Sidebar = () => {
         console.error("Error parsing user data:", error);
       }
     }
-  }, []);
+  }, [location.pathname]);
 
   const toggleExpand = (title: string) => {
     setExpandedItem(expandedItem === title ? null : title);
@@ -100,6 +111,12 @@ const Sidebar = () => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const isItemActive = (item: MenuItem) => {
+    const currentPath = location.pathname;
+    return item.link === currentPath || 
+           (item.subItems?.some(subItem => subItem.link === currentPath));
   };
 
   if (isMobile) {
@@ -140,7 +157,7 @@ const Sidebar = () => {
                     <Link
                       to={item.link}
                       className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
-                        item.isActive ? "bg-[#34495e]" : ""
+                        isItemActive(item) ? "bg-[#34495e]" : ""
                       }`}
                       onClick={() => isMobile && setMobileMenuOpen(false)}
                     >
@@ -151,7 +168,7 @@ const Sidebar = () => {
                     <button
                       onClick={() => toggleExpand(item.title)}
                       className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
-                        item.isActive ? "bg-[#34495e]" : ""
+                        isItemActive(item) ? "bg-[#34495e]" : ""
                       }`}
                     >
                       <item.icon className="w-5 h-5 mr-3" />
@@ -167,7 +184,7 @@ const Sidebar = () => {
                             <CustomerItem title={subItem.title} />
                           ) : (
                             <a 
-                              href="#" 
+                              href={subItem.link || "#"} 
                               className="block py-2 px-12 hover:bg-[#1c2a38] text-gray-300 flex items-center"
                               onClick={() => isMobile && setMobileMenuOpen(false)}
                             >
@@ -222,7 +239,7 @@ const Sidebar = () => {
                 <Link
                   to={item.link}
                   className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
-                    item.isActive ? "bg-[#34495e]" : ""
+                    isItemActive(item) ? "bg-[#34495e]" : ""
                   }`}
                 >
                   <item.icon className="w-5 h-5 mr-3" />
@@ -232,7 +249,7 @@ const Sidebar = () => {
                 <button
                   onClick={() => toggleExpand(item.title)}
                   className={`flex items-center w-full py-3 px-5 text-left hover:bg-[#34495e] ${
-                    item.isActive ? "bg-[#34495e]" : ""
+                    isItemActive(item) ? "bg-[#34495e]" : ""
                   }`}
                 >
                   <item.icon className="w-5 h-5 mr-3" />
@@ -248,7 +265,7 @@ const Sidebar = () => {
                         <CustomerItem title={subItem.title} />
                       ) : (
                         <a 
-                          href="#" 
+                          href={subItem.link || "#"} 
                           className="block py-2 px-12 hover:bg-[#1c2a38] text-gray-300 flex items-center"
                         >
                           <subItem.icon className="w-4 h-4 mr-2 opacity-70" />
